@@ -1,0 +1,2 @@
+# djinni
+Project scaffolding helper

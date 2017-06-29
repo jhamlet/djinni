@@ -1,0 +1,12 @@
+  {
+    "presets": [
+      "modern-browsers"
+    ],
+    "plugins": [
+      "transform-object-rest-spread",
+      "transform-runtime"
+    ],
+    "ignore": [
+      "node_modules"
+    ]
+}
