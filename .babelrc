@@ -1,10 +1,18 @@
   {
     "presets": [
-      "modern-browsers"
+      ["env", {
+        "targets": {
+          "node": "current"
+        }
+      }]
     ],
     "plugins": [
       "transform-object-rest-spread",
       "transform-runtime"
+    ],
+    "only": [
+      "src",
+      "test"
     ],
     "ignore": [
       "node_modules"

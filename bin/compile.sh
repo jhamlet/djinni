@@ -1,8 +1,9 @@
-#!/usr/bin/env sh
+#!/bin/sh
 
-SCRIPT_DIR=$( cd $( dirname $0 ) && pwd)
-PROJECT_DIR=$( dirname $SCRIPT_DIR )
-BABEL=$PROJECT_DIR/node_modules/.bin/babel
+DIR_NAME=$( dirname "$0" )
+# shellcheck source=/dev/null
+source "$DIR_NAME/common.sh"
 
-$BABEL $PROJECT_DIR/src -d $PROJECT_DIR
+mkdir -p "$DIST_DIR"
+babel "$@" --minified --no-comments "$SRC_DIR" -d "$DIST_DIR"
 

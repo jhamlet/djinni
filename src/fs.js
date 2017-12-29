@@ -1,54 +1,69 @@
 import { Observable } from 'rxjs';
-import path, { parse } from 'util/path';
-import fs, {
+import { curryN, flatten, filter, is, pipe } from 'ramda';
+import {
   readdir as fsReaddir,
   readFile as fsReadFile,
+  writeFile as fsWriteFile,
   stat as fsStat
 } from 'fs';
+import path from 'path';
 
-const { bindNodeCallback, empty, from } = Observable;
+const isString = is(String);
+const { bindNodeCallback, empty, from, of } = Observable;
 
-const readdir  = bindNodeCallback(fsReaddir);
-const readFile = bindNodeCallback(fsReadFile);
-const stat     = bindNodeCallback(fsStat);
+const prefix     = curryN(2, path.join);
+const stringArgs = pipe(flatten, filter(isString));
 
-export { readdir, readFile, stat };
+const readdir   = bindNodeCallback(fsReaddir);
+const readFile  = bindNodeCallback(fsReadFile);
+const writeFile = bindNodeCallback(fsWriteFile);
+const stat      = bindNodeCallback(fsStat);
 
-export const node = filepath =>
-  stat(filepath).
-    map(stats => ({
-      stats,
-      filepath,
-      ...(parse(filepath)),
-      content: stats.isDirectory() ?
-        readdir(filepath).
-        concatMap(from).
-        map(name => path.join(filepath, name)).
-        concatMap(node)
-        :
-        stats.isFile() ? readFile(filepath) : empty()
-    })).
+export { readdir, readFile, writeFile, stat };
+export { readFile as read, writeFile as write };
+
+export const node = (...args) =>
+  from(stringArgs(args)).
+    concatMap(filename =>
+      stat(filename).
+      map(stats => ({
+        stats,
+        filename,
+        content: stats.isDirectory() ?
+          readdir(filename).
+          concatMap(from).
+          map(prefix(filename)).
+          concatMap(node)
+          : stats.isFile() ? readFile(filename) : empty()
+      }))
+    ).
     publishLast().
     refCount();
 
-export const file = filepath =>
-  node(filepath).
+export const file = (...args) =>
+  node(args).
   do(node => {
     if (!node.stats.isFile()) {
-      throw new Error(`'${filepath}' is not a file.`);
+      throw new Error(`'${node.filename}' is not a file.`);
     }
   }).
   publishLast().
   refCount();
 
-export const directory = filepath =>
-  node(filepath).
-  do(node => {
-    if (!node.stats.isDirectory()) {
-      throw new Error(`'${filepath}' is not a directory.`);
-    }
-  }).
-  publishLast().
-  refCount();
+export const directory = (...args) =>
+  node(args).
+    do(node => {
+      if (!node.stats.isDirectory()) {
+        throw new Error(`'${node.filename}' is not a directory.`);
+      }
+    }).
+    publishLast().
+    refCount();
 
-export default fs;
+export const traverse = node =>
+  (node.stats.isDirectory() ?
+    node.content.concatMap(traverse) :
+    of(node)).
+    publishReplay().
+    refCount();
+

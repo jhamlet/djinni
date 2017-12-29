@@ -1,18 +1,27 @@
 {
   "name": "@hamletink/djinni",
   "author": "Jerry Hamlet <jerry@hamletink.com>",
-  "license": "ISC",
+  "license": "MIT",
   "version": "0.1.0",
   "description": "File pre-processor framework",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "bin": {
+    "djinni": "./bin/djinni.js"
+  },
   "scripts": {
     "compile": "./bin/compile.sh",
     "test": "./bin/test.sh",
     "clean": "./bin/clean.sh"
   },
   "dependencies": {
-    "ramda": "0.24.1",
-    "rxjs": "5.4.0"
+    "commander": "2.12.2",
+    "debug": "3.1.0",
+    "glob": "7.1.2",
+    "mkdirp": "0.5.1",
+    "nodemon": "1.14.6",
+    "ramda": "0.25.0",
+    "rimraf": "2.6.2",
+    "rxjs": "5.5.6"
   },
   "devDependencies": {
     "babel-cli": "6.24.1",
@@ -20,7 +29,7 @@
     "babel-eslint": "7.2.3",
     "babel-plugin-transform-object-rest-spread": "6.23.0",
     "babel-plugin-transform-runtime": "6.23.0",
-    "babel-preset-modern-browsers": "9.0.2",
+    "babel-preset-env": "1.6.1",
     "babel-register": "6.24.1",
     "babel-runtime": "6.23.0",
     "chai": "4.0.2",

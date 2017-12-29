@@ -6,6 +6,7 @@
 /**
  * A function that eceives a reference to the `djinni` instance to perform
  * various operations.
+ *
  * @callback PluginCallback
  * @param {Djinni} djinni
  * @returns {Observable}

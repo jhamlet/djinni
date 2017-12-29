@@ -2,16 +2,30 @@
   "extends": "eslint:recommended",
   "parser": "babel-eslint",
   "parserOptions": {
-    "ecmaVersion": 7,
-    "sourceType": "module"
+    "ecmaVersion": 8,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "arrowFunctions": true
+    }
   },
   "plugins": [
-    "babel"
+    "babel",
   ],
-  "ecmaFeatures": {
-    "arrowFunctions": true
-  },
   "env": {
     "node": true
-  }
+  },
+  "overrides": [
+    /* overrides for test files */
+    {
+      "files": [ "test/**/**/*.js" ],
+      "globals": {
+        "describe": false,
+        "it": false,
+        "before": false,
+        "beforeEach": false,
+        "after": false,
+        "afterEach": false
+      }
+    }
+  ]
 }
