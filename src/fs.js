@@ -6,13 +6,20 @@ import {
   writeFile as fsWriteFile,
   stat as fsStat
 } from 'fs';
-import path from 'path';
+import path from './path';
 
 const isString = is(String);
 const { bindNodeCallback, empty, from, of } = Observable;
 
 const prefix     = curryN(2, path.join);
 const stringArgs = pipe(flatten, filter(isString));
+
+import rimraf from 'rimraf';
+export const rmrf = bindNodeCallback(rimraf);
+
+const globby = bindNodeCallback(require('glob'));
+export const glob =
+  (pattern, opts = {}) => globby(pattern, opts).concatMap(from);
 
 const readdir   = bindNodeCallback(fsReaddir);
 const readFile  = bindNodeCallback(fsReadFile);
