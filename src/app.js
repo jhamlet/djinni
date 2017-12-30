@@ -1,51 +1,71 @@
-import program from 'commander';
 import pkg from '../package.json';
 import debug from './debug';
-import { resolve, watchFile } from './fs';
-import { AsyncSubject, Observable } from 'rxjs';
-import { prop } from 'ramda';
+import { resolve, watchFile, write } from './fs';
+import { Observable } from 'rxjs';
+import {
+  always, assocPath, compose, invoker, is, path as getPath, prop, unary
+} from 'ramda';
 
 const { defer, of } = Observable;
 const { assign, create } = Object;
 
+const callToString = invoker(0, 'toString');
+const getContent   = prop('content');
+const parseJson    = unary(JSON.parse);
+const toJson       = value => JSON.stringify(value, null, 2);
+const bufferToJs   = compose(parseJson, callToString);
+
+const isArray = is(Array);
+const rcFile  = defer(() => resolve('.djinnirc').take(1));
+
+const rcContents =
+  rcFile.
+  concatMap(file =>
+    of(file).
+    concat(watchFile(file.filename).switchMap(always(rcFile)))
+  ).
+  concatMap(getContent).
+  map(bufferToJs);
+
+import program from 'commander';
+
 program.
   name('djinni').
-  version(pkg.version);
-
-const rcFile     = defer(() => resolve('.djinnirc'));
-const rcFilepath = rcFile.map(prop('filename'));
-
-const config =
-  rcFile.
-  concatMap(prop('content')).
-  map(json => JSON.parse(json)).
-  publish().
-  refCount();
-
-rcFilepath.
-  take(1).
-  concatMap(filepath => watchFile(filepath)).
-  subscribe(
-    ({ type, original, filename }) =>
-      debug.log(`file: ${original}, changed: ${type} => ${filename}`),
-    error => debug.error(error)
-  );
+  version(pkg.version).
+  description('Magick');
 
 const app = assign(create(program), {
-  get (path) {
+  configuration: rcContents.publish().refCount(),
 
+  get (path) {
+    return rcContents.map(getPath(isArray(path) ? path : [path]));
   },
 
   set (path, value) {
+    return rcContents.
+      take(1).
+      map(assocPath(isArray(path) ? path : [path], value)).
+      map(toJson).
+      concatMap(data =>
+        rcFile.
+        concatMap(({ filename }) =>
+          write(filename, data, 'utf8')
+        )
+      ).
+      ignoreElements();
+  },
 
+  run (args) {
+    program.parse(args);
+    app.
+      get(['config', 'foo']).
+      distinctUntilChanged().
+      subscribe(cfg => debug.log(cfg));
+
+    app.set(['config', 'foo'], 'hogarth').subscribe();
   }
 });
 
-const appSubject = new AsyncSubject();
-export default appSubject;
+export default app;
 
-appSubject.next(app);
-appSubject.complete();
-
-program.parse(process.argv);
 
