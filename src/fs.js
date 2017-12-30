@@ -1,4 +1,4 @@
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 const { bindNodeCallback, empty, from, of } = Observable;
 
 import { curry, curryN, flatten, filter, is, pipe } from 'ramda';
@@ -14,6 +14,7 @@ import {
   watch as fsWatch
 } from 'fs';
 
+const { assign } = Object;
 const isString   = is(String);
 const isArray    = is(Array);
 const prefix     = curryN(2, join);
@@ -97,5 +98,50 @@ export const resolve = curry((patterns,  opts = {}) => {
     refCount();
 });
 
-export const watch = (filepath, opts) => {
+const pump = curryN(3, (disposed, observer, error, value) => {
+  const done = disposed();
+  !done && error ? observer.error(error)
+    : !done ? observer.next(value)
+    : null;
+});
+
+const disposer = () => {
+  let disposed = false;
+  return assign((...args) => {
+    if (args.length) {
+      disposed = true;
+    }
+    return disposed;
+  });
 };
+
+export const watch = (filepath, opts) =>
+  Observable.create(observer => {
+    const watcher = fsWatch(filepath, opts);
+    const disposed = disposer();
+
+    const listener = pump(disposed, observer);
+    const change = (type, filename) => listener(null, {
+      type, filename, original: filepath
+    });
+
+    watcher.on('error', listener);
+    watcher.on('change', change);
+
+    return () => {
+      disposed(true);
+      watcher.close();
+    };
+  });
+
+export const watchFile = (filepath, opts) =>
+  watch(filepath, opts).
+    take(1).
+    concatMap(event =>
+      of(event).
+      // give tick to allow for file system to update
+      // should probably check stats...
+      delay(0).
+      concat(watchFile(filepath, opts))
+    );
+
