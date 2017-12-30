@@ -1,4 +1,4 @@
-import path, { dirname, sep } from 'path';
+import { dirname, sep } from 'path';
 
 export const explode = (filepath, memo = []) => {
   const dir = dirname(filepath);
@@ -12,4 +12,3 @@ export const explode = (filepath, memo = []) => {
   return explode(dir, memo);
 };
 
-export default { ...path, explode };

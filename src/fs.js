@@ -1,25 +1,23 @@
-import { Observable } from 'rxjs';
-import { curryN, flatten, filter, is, pipe } from 'ramda';
+import { Observable, Subject } from 'rxjs';
+const { bindNodeCallback, empty, from, of } = Observable;
+
+import { curry, curryN, flatten, filter, is, pipe } from 'ramda';
+
+import { explode } from './path';
+import { join } from 'path';
+
 import {
   readdir as fsReaddir,
   readFile as fsReadFile,
   writeFile as fsWriteFile,
-  stat as fsStat
+  stat as fsStat,
+  watch as fsWatch
 } from 'fs';
-import path from './path';
 
-const isString = is(String);
-const { bindNodeCallback, empty, from, of } = Observable;
-
-const prefix     = curryN(2, path.join);
+const isString   = is(String);
+const isArray    = is(Array);
+const prefix     = curryN(2, join);
 const stringArgs = pipe(flatten, filter(isString));
-
-import rimraf from 'rimraf';
-export const rmrf = bindNodeCallback(rimraf);
-
-const globby = bindNodeCallback(require('glob'));
-export const glob =
-  (pattern, opts = {}) => globby(pattern, opts).concatMap(from);
 
 const readdir   = bindNodeCallback(fsReaddir);
 const readFile  = bindNodeCallback(fsReadFile);
@@ -74,3 +72,30 @@ export const traverse = node =>
     publishReplay().
     refCount();
 
+import rimraf from 'rimraf';
+export const rmrf = bindNodeCallback(rimraf);
+
+const globby = bindNodeCallback(require('glob'));
+export const glob =
+  (pattern, opts = {}) =>
+    globby(pattern, opts).
+    concatMap(from).
+    concatMap(node).
+    publishReplay().
+    refCount();
+
+export const resolve = curry((patterns,  opts = {}) => {
+  const { cwd = process.cwd() } = opts;
+  patterns = isArray(patterns) ? patterns : [patterns];
+
+  return from(explode(cwd)).
+    concatMap(dir =>
+      from(patterns).
+      concatMap(pattern => glob(join(dir, pattern), opts))
+    ).
+    publishReplay().
+    refCount();
+});
+
+export const watch = (filepath, opts) => {
+};

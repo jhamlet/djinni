@@ -1,17 +1,3 @@
-const { assign, freeze } = Object;
+import program from './app';
 
-const properties = {};
-
-export default freeze({
-  set (key, value) {
-    properties[key] = value;
-  },
-
-  get (key) {
-    return properties[key];
-  },
-
-  get properties () {
-    return assign({}, properties);
-  }
-});
+export default program;
