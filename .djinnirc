@@ -1,3 +1,5 @@
-module.exports = djinni => {
-  djinni.set('foo', 'baz');
-};
+{
+  "config": {},
+  "directories": [],
+  "foo": "bar"
+}

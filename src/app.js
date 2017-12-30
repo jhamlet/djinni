@@ -1,36 +1,35 @@
 import program from 'commander';
 import pkg from '../package.json';
 import debug from './debug';
-import { resolve } from './fs';
+import { resolve, watchFile } from './fs';
 import { AsyncSubject, Observable } from 'rxjs';
 import { prop } from 'ramda';
 
-const { defer } = Observable;
+const { defer, of } = Observable;
 const { assign, create } = Object;
 
 program.
   name('djinni').
   version(pkg.version);
 
-const rcFile =
-  defer(() => resolve('.djinnirc')).
-  take(1).
-  publishLast().
-  refCount();
-
-const rcFilepath =
-  rcfile.
-  map(prop('filename')).
-  do(rcfilepath => debug.info(`rcfilepath: ${rcfilepath}`)).
-  publishLast().
-  refCount();
+const rcFile     = defer(() => resolve('.djinnirc'));
+const rcFilepath = rcFile.map(prop('filename'));
 
 const config =
-  rcfile.
+  rcFile.
   concatMap(prop('content')).
   map(json => JSON.parse(json)).
   publish().
   refCount();
+
+rcFilepath.
+  take(1).
+  concatMap(filepath => watchFile(filepath)).
+  subscribe(
+    ({ type, original, filename }) =>
+      debug.log(`file: ${original}, changed: ${type} => ${filename}`),
+    error => debug.error(error)
+  );
 
 const app = assign(create(program), {
   get (path) {
