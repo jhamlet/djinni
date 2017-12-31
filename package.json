@@ -6,7 +6,8 @@
   "description": "File pre-processor framework",
   "main": "dist/index.js",
   "bin": {
-    "djinni": "./bin/djinni.js"
+    "djinni": "./bin/djinni",
+    "djinni-test": "./bin/djinnitest"
   },
   "scripts": {
     "compile": "./bin/compile.sh",

@@ -66,6 +66,9 @@ const app = assign(create(program), {
   }
 });
 
+const mod = require('./plugins/test').default;
+mod.register(app);
+
 export default app;
 
 

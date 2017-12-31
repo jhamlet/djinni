@@ -1,0 +1,6 @@
+#!/usr/bin/env node
+
+const debug = require('../dist/debug').default;
+
+debug.log('test');
+
