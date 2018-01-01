@@ -4,7 +4,7 @@ import { curryN, flatten, filter, pipe } from 'ramda';
 import { isString } from '../util/predicates';
 import { join } from 'path';
 
-import {
+import fs, {
   readdir as fsReaddir,
   readFile as fsReadFile,
   writeFile as fsWriteFile,
@@ -61,9 +61,17 @@ export const directory = (...args) =>
     refCount();
 
 import glob from './glob';
+import mkdirp from './mkdirp';
 import resolve from './resolve';
 import rmrf from './rmrf';
 import traverse from './traverse';
 import { watch, watchFile } from './watch';
 
-export { glob, resolve, rmrf, traverse, watch, watchFile };
+export { glob, mkdirp, resolve, rmrf, traverse, watch, watchFile };
+
+export default {
+  ...fs,
+  read: readFile, write: writeFile,
+  readdir, readFile, writeFile, stat, node, file, directory,
+  glob, mkdirp, resolve, rmrf, traverse, watch, watchFile
+};

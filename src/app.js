@@ -1,6 +1,6 @@
 import pkg from '../package.json';
 import debug from './debug';
-import { resolve, watchFile, write } from './fs';
+import fs, { resolve, watchFile, write } from './fs';
 import { Observable } from 'rxjs';
 import {
   always, assocPath, compose, invoker, is, path as getPath, prop, unary
@@ -35,6 +35,8 @@ program.
   description('Magick');
 
 const app = assign(create(program), {
+  fs,
+
   configuration: rcContents.publish().refCount(),
 
   get (path) {
@@ -63,6 +65,8 @@ const app = assign(create(program), {
       subscribe(cfg => debug.log(cfg));
 
     app.set(['config', 'foo'], 'hogarth').subscribe();
+
+    debug.log(fs);
   }
 });
 
