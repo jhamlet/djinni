@@ -4,11 +4,11 @@ import { curry } from 'ramda';
 import glob from './glob';
 import { explode } from '../path';
 import { join } from 'path';
-import { isArray } from '../util/predicates';
+import { defaultToArray } from '../util/projections';
 
 export const resolve = curry((patterns,  opts = {}) => {
   const { cwd = process.cwd() } = opts;
-  patterns = isArray(patterns) ? patterns : [patterns];
+  patterns = defaultToArray(patterns);
 
   return from(explode(cwd)).
     concatMap(dir =>

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
 
-require('../dist/app').default.run(process.argv);
-
+require('../app').default.run(process.argv);
 

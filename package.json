@@ -10,9 +10,9 @@
     "djinni-test": "./bin/djinnitest"
   },
   "scripts": {
-    "compile": "./bin/compile.sh",
-    "test": "./bin/test.sh",
-    "clean": "./bin/clean.sh"
+    "compile": "./task/compile.sh",
+    "test": "./task/test.sh",
+    "clean": "./task/clean.sh"
   },
   "dependencies": {
     "commander": "2.12.2",

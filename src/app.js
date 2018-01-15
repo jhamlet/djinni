@@ -1,21 +1,20 @@
 import pkg from '../package.json';
-import debug from './debug';
 import fs, { resolve, watchFile, write } from './fs';
 import { Observable } from 'rxjs';
 import {
-  always, assocPath, compose, invoker, is, path as getPath, prop, unary
+  always, assocPath, compose, invoker, path as getPath, prop, unary
 } from 'ramda';
+import { isArray } from './util/predicates';
 
 const { defer, of } = Observable;
 const { assign, create } = Object;
 
 const callToString = invoker(0, 'toString');
 const getContent   = prop('content');
-const parseJson    = unary(JSON.parse);
+const fromJson     = unary(JSON.parse);
 const toJson       = value => JSON.stringify(value, null, 2);
-const bufferToJs   = compose(parseJson, callToString);
+const bufferToJs   = compose(fromJson, callToString);
 
-const isArray = is(Array);
 const rcFile  = defer(() => resolve('.djinnirc').take(1));
 
 const rcContents =
@@ -32,12 +31,14 @@ import program from 'commander';
 program.
   name('djinni').
   version(pkg.version).
+  option('-f, --file <PATH>', 'djinni file to use').
+  option('-d, --chdir <PATH>', 'directory to change to').
   description('Magick');
 
 const app = assign(create(program), {
   fs,
 
-  configuration: rcContents.publish().refCount(),
+  config: rcContents.publish().refCount(),
 
   get (path) {
     return rcContents.map(getPath(isArray(path) ? path : [path]));
@@ -59,14 +60,6 @@ const app = assign(create(program), {
 
   run (args) {
     program.parse(args);
-    app.
-      get(['config', 'foo']).
-      distinctUntilChanged().
-      subscribe(cfg => debug.log(cfg));
-
-    app.set(['config', 'foo'], 'hogarth').subscribe();
-
-    debug.log(fs);
   }
 });
 
